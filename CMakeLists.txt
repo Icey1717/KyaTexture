@@ -6,8 +6,22 @@ set(SOURCES
 	"src/Texture.h"
 )
 
+#set a cache variable for log support
+set(LogSupport OFF CACHE BOOL "Enable log support")
+
+set(Standalone OFF CACHE BOOL "Enable standalone mode")
+
 add_library(${TargetName} ${SOURCES})
 
-target_link_libraries(${TargetName} PRIVATE Log Kya Renderer)
+if(LogSupport)
+	target_compile_definitions(${TargetName} PRIVATE LOG_SUPPORT)
+	target_link_libraries(${TargetName} PRIVATE Log)
+endif()
+
+if(Standalone)
+	target_compile_definitions(${TargetName} PRIVATE STANDALONE)
+else()
+	target_link_libraries(${TargetName} PRIVATE Kya Renderer)
+endif()
 
 target_include_directories(${TargetName} PUBLIC "src")
