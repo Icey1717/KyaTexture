@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <memory>
 
 struct ed_g2d_manager;
 struct ed_g2d_material;
@@ -55,7 +56,7 @@ namespace Renderer
 						Bitmap bitmap;
 						Bitmap palette;
 
-						SimpleTexture* pSimpleTexture = nullptr;
+						std::unique_ptr<SimpleTexture> pSimpleTexture;
 					};
 
 					void ProcessTexture(ed_g2d_texture* pTexture, const int materialIndex, const int layerIndex);

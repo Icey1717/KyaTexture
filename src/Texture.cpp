@@ -1,63 +1,10 @@
 #include "Texture.h"
-
-#include <cassert>
-#include <unordered_map>
-
 #include "ed3D.h"
-
-#ifdef LOG_SUPPORT
 #include "Log.h"
-#endif
-
 #include "renderer.h"
 #include "port.h"
 
-// Registers
-#define GS_PRMODE       0x1b
-#define GS_TEX0_1       0x06
-#define GS_TEX0_2       0x07
-#define GS_TEX1_1       0x14
-#define GS_TEX1_2       0x15
-#define GS_TEX2_1       0x16
-#define GS_TEX2_2       0x17
-#define GS_TEXCLUT      0x1c
-#define GS_SCANMSK      0x22
-#define GS_MIPTBP1_1    0x34
-#define GS_MIPTBP1_2    0x35
-#define GS_MIPTBP2_1    0x36
-#define GS_MIPTBP2_2    0x37
-#define GS_CLAMP_1      0x08
-#define GS_CLAMP_2      0x09
-#define GS_TEXA         0x3b
-#define GS_FOGCOL       0x3d
-#define GS_TEXFLUSH     0x3f
-
-#define GS_SCISSOR_1    0x40
-#define GS_SCISSOR_2    0x41
-#define GS_ALPHA_1      0x42
-#define GS_ALPHA_2      0x43
-#define GS_DIMX         0x44
-#define GS_DTHE         0x45
-#define GS_COLCLAMP     0x46
-#define GS_TEST_1       0x47
-#define GS_TEST_2       0x48
-#define GS_PABE         0x49
-#define GS_FBA_1        0x4a
-#define GS_FBA_2        0x4b
-
-#define GS_BITBLTBUF    0x50
-#define GS_TRXPOS       0x51
-#define GS_TRXREG       0x52
-#define GS_TRXDIR       0x53
-#define GS_HWREG        0x54
-
-#define GIF_PACKED_AD 0x0e
-
-#ifdef LOG_SUPPORT
 #define TEXTURE_LOG(level, format, ...) MY_LOG_CATEGORY("TextureLibrary", level, format, ##__VA_ARGS__)
-#else
-#define TEXTURE_LOG(level, format, ...)
-#endif
 
 namespace Renderer
 {
@@ -75,45 +22,45 @@ namespace Renderer
 
 			for (int i = 0; i < commandList.size; i++) {
 				switch (pPkt->asU32[2]) {
-				case GS_TEX0_1:
+				case SCE_GS_TEX0_1:
 				{
 					assert(!bSet);
 					imageData.registers.tex.CMD = pPkt->cmdA;
 					bSet = true;
 
 					const GIFReg::GSTex tex = *reinterpret_cast<GIFReg::GSTex*>(&pPkt->cmdA);
-					TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessRenderCommandList GS_TEX0_1: CBP: 0x{:x} CLD: {} CPSM: {} CSA: {} CSM: {}",
+					TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessRenderCommandList SCE_GS_TEX0_1: CBP: 0x{:x} CLD: {} CPSM: {} CSA: {} CSM: {}",
 						tex.CBP, tex.CLD, tex.CPSM, tex.CSA, tex.CSM);
 
-					TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessRenderCommandList GS_TEX0_1: PSM: {} TBP0: 0x{:x} TBW: {} TCC: {} TFX: {} TW: {} TH: {}",
+					TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessRenderCommandList SCE_GS_TEX0_1: PSM: {} TBP0: 0x{:x} TBW: {} TCC: {} TFX: {} TW: {} TH: {}",
 						tex.PSM, tex.TBP0, tex.TBW, tex.TCC, tex.TFX, tex.TW, tex.TH);
 				}
 				break;
-				case GS_CLAMP_1:
+				case SCE_GS_CLAMP_1:
 				{
 					imageData.registers.clamp.CMD = pPkt->cmdA;
 
 					const GIFReg::GSClamp clamp = *reinterpret_cast<GIFReg::GSClamp*>(&pPkt->cmdA);
-					TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessRenderCommandList GS_CLAMP_1: WMS: {} WMT: {} MINU: {} MAXU: {} MAXV: {} MINV: {}",
+					TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessRenderCommandList SCE_GS_CLAMP_1: WMS: {} WMT: {} MINU: {} MAXU: {} MAXV: {} MINV: {}",
 						clamp.WMS, clamp.WMT, clamp.MINU, clamp.MAXU, clamp.MAXV, clamp.MINV);
 				}
 				break;
-				case GS_TEST_1:
+				case SCE_GS_TEST_1:
 				{
 					imageData.registers.test.CMD = pPkt->cmdA;
 
 					const GIFReg::GSTest test = *reinterpret_cast<GIFReg::GSTest*>(&pPkt->cmdA);
-					TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessRenderCommandList GS_TEST_1: ATE: {} ATST: {} AREF: {} AFAIL: {} DATE: {} DATM: {} ZTE: {} ZTST: {}",
+					TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessRenderCommandList SCE_GS_TEST_1: ATE: {} ATST: {} AREF: {} AFAIL: {} DATE: {} DATM: {} ZTE: {} ZTST: {}",
 						test.ATE, test.ATST, test.AREF, test.AFAIL, test.DATE, test.DATM, test.ZTE, test.ZTST);
 
 				}
 				break;
-				case GS_ALPHA_1:
+				case SCE_GS_ALPHA_1:
 				{
 					imageData.registers.alpha.CMD = pPkt->cmdA;
 
 					const GIFReg::GSAlpha alpha = *reinterpret_cast<GIFReg::GSAlpha*>(&pPkt->cmdA);
-					TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessRenderCommandList GS_ALPHA_1: A: {} B: {} C: {} D: {} FIX: {}",
+					TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessRenderCommandList SCE_GS_ALPHA_1: A: {} B: {} C: {} D: {} FIX: {}",
 						alpha.A, alpha.B, alpha.C, alpha.D, alpha.FIX);
 
 					switch (alpha.A) {
@@ -165,12 +112,12 @@ namespace Renderer
 					}
 				}
 				break;
-				case GS_COLCLAMP:
+				case SCE_GS_COLCLAMP:
 				{
 					imageData.registers.colClamp.CMD = pPkt->cmdA;
 
 					const GIFReg::GSColClamp colClamp = *reinterpret_cast<GIFReg::GSColClamp*>(&pPkt->cmdA);
-					TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessRenderCommandList GS_COLCLAMP: CLAMP: {}", colClamp.CLAMP);
+					TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessRenderCommandList SCE_GS_COLCLAMP: CLAMP: {}", colClamp.CLAMP);
 				}
 				break;
 				}
@@ -192,14 +139,14 @@ namespace Renderer
 			ImageData* pCurrentImage = nullptr;
 
 			for (int i = 0; i < commandList.size; i++) {
-				if (pPkt->asU32[2] == GIF_PACKED_AD) {
+				if (pPkt->asU32[2] == SCE_GIF_PACKED_AD) {
 					if (pCurrentImage) {
 						assert(pCurrentImage->pImage);
 						assert(pCurrentImage->trxReg.RRW != 0);
 						assert(pCurrentImage->trxReg.RRH != 0);
 					}
 
-					const bool bNextCommandIsTexFlush = pPkt[1].asU32[2] == GS_TEXFLUSH;
+					const bool bNextCommandIsTexFlush = pPkt[1].asU32[2] == SCE_GS_TEXFLUSH;
 
 					if (currentMipLevel < imageData.bitmaps.size()) {
 						pCurrentImage = &imageData.bitmaps[currentMipLevel];
@@ -211,7 +158,7 @@ namespace Renderer
 					}
 				}
 
-				if (pPkt->asU32[2] == GS_TEXFLUSH) {
+				if (pPkt->asU32[2] == SCE_GS_TEXFLUSH) {
 					assert(i == commandList.size - 1);
 				}
 
@@ -220,17 +167,17 @@ namespace Renderer
 					pCurrentImage->pImage = LOAD_SECTION(pPkt->asU32[1]);
 				}
 
-				if (pPkt->cmdB == GS_TRXREG) {
+				if (pPkt->cmdB == SCE_GS_TRXREG) {
 					assert(pCurrentImage);
 					pCurrentImage->trxReg.CMD = pPkt->cmdA;
 				}
 
-				if (pPkt->cmdB == GS_TRXPOS) {
+				if (pPkt->cmdB == SCE_GS_TRXPOS) {
 					assert(pCurrentImage);
 					pCurrentImage->trxPos.CMD = pPkt->cmdA;
 				}
 
-				if (pPkt->cmdB == GS_BITBLTBUF) {
+				if (pPkt->cmdB == SCE_GS_BITBLTBUF) {
 					assert(pCurrentImage);
 					pCurrentImage->bitBltBuf.CMD = pPkt->cmdA;
 				}
@@ -352,7 +299,7 @@ Renderer::SimpleTexture* Renderer::Kya::G2D::Material::FindRenderTextureFromBitm
 	for (auto& layer : layers) {
 		for (auto& texture : layer.textures) {
 			if (texture.bitmap.GetBitmap() == pBitmap || texture.palette.GetBitmap() == pBitmap) {
-				return texture.pSimpleTexture;
+				return texture.pSimpleTexture.get();
 			}
 		}
 	}
@@ -368,7 +315,7 @@ bool Renderer::Kya::G2D::Material::GetInUse() const
 		for (auto& texture : layer.textures) {
 			if (texture.pSimpleTexture) {
 				for (auto& inUseTexture : inUseTextures) {
-					if (inUseTexture == texture.pSimpleTexture) {
+					if (inUseTexture == texture.pSimpleTexture.get()) {
 						return true;
 					}
 				}
@@ -414,9 +361,10 @@ void Renderer::Kya::G2D::Layer::ProcessTexture(ed_g2d_texture* pTexture, const i
 	TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::Layer::ProcessTexture bitmap mips: {}", combinedImageData.bitmaps.size());
 
 	// strip everything before the last forward slash 
-	const std::string textureName = pParent->pParent->name.substr(pParent->pParent->name.find_last_of('\\') + 1);
+	const std::string textureName = pParent->pParent->name.substr(pParent->pParent->name.find_last_of('\\') + 1) + " (m: " + std::to_string(materialIndex) + " l: " + std::to_string(layerIndex) + ")";
 
-	texture.pSimpleTexture = new SimpleTexture(textureName, { layerIndex, materialIndex, pParent->layers.capacity(), pParent->pParent->materials.capacity() }, combinedImageData.registers);
+	const SimpleTexture::Details details = { layerIndex, materialIndex, pParent->layers.capacity(), pParent->pParent->materials.capacity() };
+	texture.pSimpleTexture = std::make_unique<SimpleTexture>(textureName, details, combinedImageData.registers);
 	texture.pSimpleTexture->CreateRenderer(combinedImageData);
 
 	TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::Layer::ProcessTexture Texture created: {} {}/{} {}/{}", textureName, layerIndex, pParent->layers.capacity(), materialIndex, pParent->pParent->materials.capacity());
