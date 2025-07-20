@@ -4,7 +4,11 @@
 #include "renderer.h"
 #include "port.h"
 
+#ifdef LOG_SUPPORT
 #define TEXTURE_LOG(level, format, ...) MY_LOG_CATEGORY("TextureLibrary", level, format, ##__VA_ARGS__)
+#else
+#define TEXTURE_LOG(level, format, ...)
+#endif
 
 namespace Renderer
 {
@@ -363,7 +367,7 @@ void Renderer::Kya::G2D::Layer::ProcessTexture(ed_g2d_texture* pTexture, const i
 	// strip everything before the last forward slash 
 	const std::string textureName = pParent->pParent->name.substr(pParent->pParent->name.find_last_of('\\') + 1) + " (m: " + std::to_string(materialIndex) + " l: " + std::to_string(layerIndex) + ")";
 
-	const SimpleTexture::Details details = { layerIndex, materialIndex, pParent->layers.capacity(), pParent->pParent->materials.capacity() };
+	const SimpleTexture::Details details = { layerIndex, materialIndex, pParent->layers.capacity(), pParent->pParent->materials.capacity(), pBitmapHashCode->hash.number };
 	texture.pSimpleTexture = std::make_unique<SimpleTexture>(textureName, details, combinedImageData.registers);
 	texture.pSimpleTexture->CreateRenderer(combinedImageData);
 
