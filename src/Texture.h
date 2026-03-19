@@ -5,6 +5,16 @@
 #include <functional>
 #include <memory>
 
+/*
+	AddTexture() → G2D ctor → ProcessMaterial → ProcessLayer → ProcessTexture
+	 → CreateFromBitmapAndPalette  (populates CombinedImageData from DMA packets)
+	 → ProcessRenderCommandList    (extracts GS register state from material render commands)
+	 → SimpleTexture::CreateRenderer (outside this library, implemented per renderer platform)
+		 → TextureUpload::UploadTexture  (PS2 memory → RGBA8 via GSLocalMemory)
+		 → GSSimpleTexture::CreateResources  (VkImage/VkImageView/VkDeviceMemory)
+		 → GSSimpleTexture::UploadData       (staging buffer → GPU)
+*/
+
 struct ed_g2d_manager;
 struct ed_g2d_material;
 struct ed_g2d_layer;
@@ -123,6 +133,7 @@ namespace Renderer
 
 		private:
 			static void AddTexture(ed_g2d_manager* pManager, std::string name);
+			static void RemoveTexture(ed_g2d_manager* pManager);
 
 			std::vector<G2D> gTextures;
 		};

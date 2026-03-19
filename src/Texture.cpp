@@ -1,5 +1,7 @@
 #include "Texture.h"
 #include "ed3D.h"
+#include "ed3D/ed3DG2D.h"
+#include "ed3D/ed3DG3D.h"
 #include "Log.h"
 #include "renderer.h"
 #include "port.h"
@@ -168,7 +170,7 @@ namespace Renderer
 
 				if ((pPkt->asU32[0] >> 28) == 0x03) {
 					assert(pCurrentImage);
-					pCurrentImage->pImage = LOAD_SECTION(pPkt->asU32[1]);
+					pCurrentImage->pImage = LOAD_POINTER(pPkt->asU32[1]);
 				}
 
 				if (pPkt->cmdB == SCE_GS_TRXREG) {
@@ -260,7 +262,7 @@ void Renderer::Kya::G2D::ProcessMaterial(ed_g2d_material* pMaterial, const int m
 
 	TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessMaterial Nb layers: {} flags: 0x{:x}", pMaterial->nbLayers, pMaterial->flags);
 
-	material.renderCommands.pList = LOAD_SECTION_CAST(edpkt_data*, pMaterial->pCommandBufferTexture);
+	material.renderCommands.pList = LOAD_POINTER_CAST(edpkt_data*, pMaterial->pCommandBufferTexture);
 	material.renderCommands.size = pMaterial->commandBufferTextureSize;
 
 	TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessMaterial Render command size: {} (0x{:x})", material.renderCommands.size, material.renderCommands.size);
@@ -270,7 +272,7 @@ void Renderer::Kya::G2D::ProcessMaterial(ed_g2d_material* pMaterial, const int m
 	for (int i = 0; i < pMaterial->nbLayers; ++i) {
 		TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessMaterial Processing layer: {}", i);
 
-		ed_Chunck* pLAY = LOAD_SECTION_CAST(ed_Chunck*, pMaterial->aLayers[i]);
+		ed_Chunck* pLAY = LOAD_POINTER_CAST(ed_Chunck*, pMaterial->aLayers[i]);
 		TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::ProcessMaterial Layer chunk header: {}", pLAY->GetHeaderString());
 
 		ed_g2d_layer* pLayer = reinterpret_cast<ed_g2d_layer*>(pLAY + 1);
@@ -290,7 +292,7 @@ void Renderer::Kya::G2D::Material::ProcessLayer(ed_g2d_layer* pLayer, const int 
 		pLayer->flags_0x0, pLayer->flags_0x4, pLayer->field_0x1b, pLayer->bHasTexture, pLayer->paletteId);
 
 	if (pLayer->bHasTexture) {
-		ed_Chunck* pTEX = LOAD_SECTION_CAST(ed_Chunck*, pLayer->pTex);
+		ed_Chunck* pTEX = LOAD_POINTER_CAST(ed_Chunck*, pLayer->pTex);
 		TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::Material::ProcessLayer Texture chunk header: {}", pTEX->GetHeaderString());
 
 		ed_g2d_texture* pTexture = reinterpret_cast<ed_g2d_texture*>(pTEX + 1);
@@ -339,19 +341,19 @@ void Renderer::Kya::G2D::Layer::ProcessTexture(ed_g2d_texture* pTexture, const i
 	TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::Layer::ProcessTexture Texture hash: {} field 0x14: {} bHasPalette: {}",
 		pTexture->hashCode.hash.ToString(), pTexture->pAnimSpeedNormalExtruder, pTexture->bHasPalette);
 
-	ed_hash_code* pBitmapHashCode = LOAD_SECTION_CAST(ed_hash_code*, pTexture->hashCode.pData);
+	ed_hash_code* pBitmapHashCode = LOAD_POINTER_CAST(ed_hash_code*, pTexture->hashCode.pData);
 	if (pBitmapHashCode != (ed_hash_code*)0x0) {
-		ed_Chunck* pT2D = LOAD_SECTION_CAST(ed_Chunck*, pBitmapHashCode->pData);
+		ed_Chunck* pT2D = LOAD_POINTER_CAST(ed_Chunck*, pBitmapHashCode->pData);
 
 		TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::Layer::ProcessTexture Bitmap chunk header: {}", pT2D->GetHeaderString());
 		ed_g2d_bitmap* pBitmap = reinterpret_cast<ed_g2d_bitmap*>(pT2D + 1);
-		texture.bitmap.SetBitmap(pBitmap);		
+		texture.bitmap.SetBitmap(pBitmap);
 	}
 
 	if (pTexture->bHasPalette) {
 		ed_hash_code* pPaletteHashCodes = reinterpret_cast<ed_hash_code*>(pTexture + 1);
-		ed_hash_code* pPaletteHashCode = LOAD_SECTION_CAST(ed_hash_code*, pPaletteHashCodes[pLayer->paletteId].pData);
-		ed_Chunck* pT2D = LOAD_SECTION_CAST(ed_Chunck*, pPaletteHashCode->pData);
+		ed_hash_code* pPaletteHashCode = LOAD_POINTER_CAST(ed_hash_code*, pPaletteHashCodes[pLayer->paletteId].pData);
+		ed_Chunck* pT2D = LOAD_POINTER_CAST(ed_Chunck*, pPaletteHashCode->pData);
 
 		TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::Layer::ProcessTexture Palette chunk header: {}", pT2D->GetHeaderString());
 		ed_g2d_bitmap* pBitmap = reinterpret_cast<ed_g2d_bitmap*>(pT2D + 1);
@@ -383,10 +385,10 @@ void Renderer::Kya::G2D::Bitmap::SetBitmap(ed_g2d_bitmap* pBitmap)
 void Renderer::Kya::G2D::Bitmap::UpdateCommands()
 {
 	if (pBitmap->pPSX2) {
-		edPSX2Header* pHeader = LOAD_SECTION_CAST(edPSX2Header*, pBitmap->pPSX2);
+		edPSX2Header* pHeader = LOAD_POINTER_CAST(edPSX2Header*, pBitmap->pPSX2);
 
 		for (int i = 0; i < 2; i++) {
-			uploadCommands[i].pList = LOAD_SECTION_CAST(edpkt_data*, pHeader[i].pPkt);
+			uploadCommands[i].pList = LOAD_POINTER_CAST(edpkt_data*, pHeader[i].pPkt);
 			uploadCommands[i].size = pHeader[i].size;
 			TEXTURE_LOG(LogLevel::Info, "Renderer::Kya::G2D::Bitmap::UpdateCommands Upload command size: {} (0x{:x})", uploadCommands[i].size, uploadCommands[i].size);
 		}
@@ -396,6 +398,7 @@ void Renderer::Kya::G2D::Bitmap::UpdateCommands()
 void Renderer::Kya::TextureLibrary::Init()
 {
 	ed3DGetTextureLoadedDelegate() += Renderer::Kya::TextureLibrary::AddTexture;
+	ed3DGetTextureUnloadedDelegate() += Renderer::Kya::TextureLibrary::RemoveTexture;
 }
 
 const Renderer::Kya::G2D::Material* Renderer::Kya::TextureLibrary::FindMaterial(const ed_g2d_material* pMaterial) const
@@ -409,6 +412,10 @@ const Renderer::Kya::G2D::Material* Renderer::Kya::TextureLibrary::FindMaterial(
 	for (auto& texture : gTextures) {
 		for (auto& material : texture.GetMaterials()) {
 			if (material.pMaterial == pMaterial) {
+				if (texture.GetName() == "Dupe") {
+					printf(texture.GetName().c_str());
+				}
+
 				return &material;
 			}
 		}
@@ -429,6 +436,19 @@ void Renderer::Kya::TextureLibrary::BindFromDmaMaterial(const ed_dma_material* p
 void Renderer::Kya::TextureLibrary::AddTexture(ed_g2d_manager* pManager, std::string name)
 {
 	gTextureLibrary.gTextures.emplace_back(pManager, name);
+}
+
+void Renderer::Kya::TextureLibrary::RemoveTexture(ed_g2d_manager* pManager)
+{
+	// Iterate backwards through the textures to find all to remove, as there can be multiple with the same manager.
+	for (auto it = gTextureLibrary.gTextures.rbegin(); it != gTextureLibrary.gTextures.rend(); ) {
+		if (it->GetManager() == pManager) {
+			it = decltype(it){ gTextureLibrary.gTextures.erase(std::next(it).base()) };
+		}
+		else {
+			++it;
+		}
+	}
 }
 
 const Renderer::Kya::TextureLibrary& Renderer::Kya::GetTextureLibrary()
