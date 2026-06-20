@@ -230,6 +230,10 @@ Renderer::Kya::G2D::G2D(ed_g2d_manager* pManager, std::string name)
 {
 	TEXTURE_LOG(LogLevel::Info, "\n\nRenderer::Kya::G2D::G2D Beginning processing of texture: {}", name.c_str());
 
+	//if (name == "D:\\PROJECTS\\B-WITCH\\RESOURCE\\Build\\OBJECT\\CHARACTER\\BOUCHON\\MESH\\BOUCHON_Scene01_for_ilot_11_06.g2d") {
+	//	TEXTURE_LOG(LogLevel::Info, "\n\nRenderer::Kya::G2D::G2D Beginning processing of texture: {}", name.c_str());
+	//}
+
 	const int nbMaterials = ed3DG2DGetG2DNbMaterials(pManager->pMATA_HASH);
 	materials.reserve(nbMaterials);
 
@@ -406,6 +410,7 @@ const Renderer::Kya::G2D::Material* Renderer::Kya::TextureLibrary::FindMaterial(
 	constexpr bool bUseTextureCache = true;
 
 	if (bUseTextureCache) {
+		assert(gTextureCache.find(pMaterial) != gTextureCache.end());
 		return gTextureCache[pMaterial];
 	}
 
