@@ -80,6 +80,7 @@ namespace Renderer
 				void ProcessLayer(ed_g2d_layer* pLayer, const int materialIndex);
 
 				SimpleTexture* FindRenderTextureFromBitmap(ed_g2d_bitmap* pBitmap) const;
+				SimpleTexture* FindRenderTextureFromLayer(int layerIndex) const;
 
 				bool GetInUse() const;
 
@@ -128,6 +129,7 @@ namespace Renderer
 			const G2D::Material* FindMaterial(const ed_g2d_material* pMaterial) const;
 
 			void BindFromDmaMaterial(const ed_dma_material* pMaterial) const;
+			void BindMaterialLayer(const ed_g2d_material* pMaterial, int layerIndex) const;
 
 			inline int GetTextureCount() const { return gTextures.size(); }
 

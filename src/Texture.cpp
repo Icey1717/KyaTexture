@@ -317,6 +317,20 @@ Renderer::SimpleTexture* Renderer::Kya::G2D::Material::FindRenderTextureFromBitm
 	return nullptr;
 }
 
+Renderer::SimpleTexture* Renderer::Kya::G2D::Material::FindRenderTextureFromLayer(int layerIndex) const
+{
+	if ((layerIndex < 0) || (static_cast<size_t>(layerIndex) >= layers.size())) {
+		return nullptr;
+	}
+
+	const auto& layer = layers[layerIndex];
+	if (layer.textures.empty()) {
+		return nullptr;
+	}
+
+	return layer.textures.front().pSimpleTexture.get();
+}
+
 bool Renderer::Kya::G2D::Material::GetInUse() const
 {
 	auto& inUseTextures = Renderer::GetInUseTextures();
@@ -434,6 +448,15 @@ void Renderer::Kya::TextureLibrary::BindFromDmaMaterial(const ed_dma_material* p
 	const G2D::Material* pRendererMaterial = FindMaterial(pMaterial->pMaterial);
 	assert(pRendererMaterial);
 	Renderer::SimpleTexture* pRendererTexture = pRendererMaterial->FindRenderTextureFromBitmap(pMaterial->pBitmap);
+	assert(pRendererTexture);
+	Renderer::BindTexture(pRendererTexture);
+}
+
+void Renderer::Kya::TextureLibrary::BindMaterialLayer(const ed_g2d_material* pMaterial, int layerIndex) const
+{
+	const G2D::Material* pRendererMaterial = FindMaterial(pMaterial);
+	assert(pRendererMaterial);
+	Renderer::SimpleTexture* pRendererTexture = pRendererMaterial->FindRenderTextureFromLayer(layerIndex);
 	assert(pRendererTexture);
 	Renderer::BindTexture(pRendererTexture);
 }
